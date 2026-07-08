@@ -1,8 +1,11 @@
 import {
+  Accordion,
   BlogPreviewGrid,
+  FeatureHighlight,
   FeaturedCaseStudy,
   HeroBanner,
   ServiceCardGrid,
+  ShowcaseCardGrid,
 } from "@/components/home";
 import { getAllBlogPosts } from "@/content/blog";
 import { byteCanvasHome } from "@/content/home";
@@ -37,6 +40,18 @@ export default function Home() {
         subheading={c.services.subheading}
         cards={[...c.services.cards]}
       />
+      <ShowcaseCardGrid
+        id={c.showcase.id}
+        heading={c.showcase.heading}
+        subheading={c.showcase.subheading}
+        cards={[...c.showcase.cards]}
+      />
+      <Accordion
+        id={c.faq.id}
+        heading={c.faq.heading}
+        description={c.faq.description}
+        items={[...c.faq.items]}
+      />
       <BlogPreviewGrid
         id={c.blogPreview.id}
         heading={c.blogPreview.heading}
@@ -45,6 +60,14 @@ export default function Home() {
         cardCtaLabel={c.blogPreview.cardCtaLabel}
         viewAllHref={c.blogPreview.viewAllHref}
         viewAllLabel={c.blogPreview.viewAllLabel}
+      />
+      <FeatureHighlight
+        id={c.featureHighlight.id}
+        sectionId={c.featureHighlight.sectionId}
+        heading={c.featureHighlight.heading}
+        subheading={c.featureHighlight.subheading}
+        feature={c.featureHighlight.feature}
+        imagePosition="right"
       />
       <FeaturedCaseStudy
         sectionId={c.featuredCase.sectionId}

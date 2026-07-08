@@ -11,6 +11,23 @@ export type ServiceCard = {
   imageAlt: string;
 };
 
+export type AccordionItem = {
+  heading: string;
+  description: string;
+};
+
+export type FeatureCard = {
+  kicker: string;
+  date: string;
+  dateIso: string;
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkHref: string;
+  imageSrc: string;
+  imageAlt: string;
+};
+
 export type FooterColumn = {
   title: string;
   links: { label: string; href: string }[];
@@ -79,6 +96,38 @@ export const byteCanvasHome = {
       },
     ] satisfies ServiceCard[],
   },
+  showcase: {
+    id: "spaces",
+    heading: "Spaces we design",
+    subheading:
+      "Room-by-room expertise across the home — each zone planned for how you actually use it.",
+    cards: [
+      {
+        title: "Primary suites",
+        description:
+          "Calm palettes, layered lighting, and storage that disappears into joinery so bedrooms feel restful, not cluttered.",
+        imageSrc:
+          "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=1080&q=80",
+        imageAlt: "Primary bedroom with soft linens and warm ambient light",
+      },
+      {
+        title: "Kitchens & dining",
+        description:
+          "Work triangles, durable surfaces, and seating that draws people in — whether you host often or cook quietly on weeknights.",
+        imageSrc:
+          "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1080&q=80",
+        imageAlt: "Modern kitchen with island and pendant lighting",
+      },
+      {
+        title: "Living & work zones",
+        description:
+          "Flexible layouts that balance open conversation areas with quiet corners for focus, reading, and everyday downtime.",
+        imageSrc:
+          "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=1080&q=80",
+        imageAlt: "Living room with sofa and built-in shelving",
+      },
+    ] satisfies ServiceCard[],
+  },
   blogPreview: {
     id: "journal",
     heading: "From the journal",
@@ -87,6 +136,49 @@ export const byteCanvasHome = {
     cardCtaLabel: "View article",
     viewAllHref: "/blog",
     viewAllLabel: "View all posts",
+  },
+  featureHighlight: {
+    id: "studio-approach",
+    sectionId: "approach",
+    heading: "Studio approach",
+    subheading:
+      "How we balance structure and warmth when reshaping a room clients use every day.",
+    feature: {
+      kicker: "Design philosophy",
+      date: "March 8, 2026",
+      dateIso: "2026-03-08",
+      title: "Built-in calm: storage, sightlines, and materials that age with the home",
+      description:
+        "We start with what has to stay — structure, light, daily routines — then layer in joinery, textiles, and art so the result feels collected, not catalogued. Here is how that plays out in a recent primary suite refresh.",
+      linkLabel: "Read the full story",
+      linkHref: "#footer",
+      imageSrc:
+        "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80",
+      imageAlt: "Serene bedroom with natural textures and soft lighting",
+    },
+  },
+  faq: {
+    id: "faq",
+    heading: "Common questions",
+    description:
+      "How we work, what to expect, and how we tailor each residential project to your home and budget.",
+    items: [
+      {
+        heading: "How does a project typically start?",
+        description:
+          "We begin with a discovery call to understand your space, priorities, and timeline. From there we outline a phased plan — layout, materials, and furnishing — with clear milestones so you know what happens at each stage.",
+      },
+      {
+        heading: "Do you work remotely or only on-site?",
+        description:
+          "We take on projects nationwide. Local clients receive full on-site support; remote clients get detailed plans, sourcing lists, and virtual walkthroughs so decisions stay collaborative without constant travel.",
+      },
+      {
+        heading: "What budget range do you usually work with?",
+        description:
+          "Most of our residential engagements span room refreshes through full-home renovations. We align scope and finishes to your budget early and flag trade-offs before anything is ordered or installed.",
+      },
+    ] satisfies AccordionItem[],
   },
   featuredCase: {
     id: "work",
@@ -106,7 +198,7 @@ export const byteCanvasHome = {
       imageSrc:
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
       imageAlt: "Bright modern home interior with dining and living areas",
-    },
+    } satisfies FeatureCard,
   },
   footer: {
     id: "footer",

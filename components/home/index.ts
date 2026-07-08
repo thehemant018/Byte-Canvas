@@ -1,6 +1,9 @@
+export { Accordion } from "./accordion";
 export { BlogPreviewGrid } from "./blog-preview-grid";
+export { FeatureHighlight } from "./feature-highlight";
 export { FeaturedCaseStudy } from "./featured-case-study";
 export { HeroBanner } from "./hero-banner";
 export { ServiceCardGrid } from "./service-card-grid";
+export { ShowcaseCardGrid } from "./showcase-card-grid";
 export { SiteFooter } from "./site-footer";
 export { SiteHeader } from "./site-header";

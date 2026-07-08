@@ -1,26 +1,26 @@
 import Image from "next/image";
 import type { ServiceCard } from "@/content/home";
 
-type ServiceCardGridProps = {
+type ShowcaseCardGridProps = {
   id: string;
   heading: string;
   subheading: string;
   cards: ServiceCard[];
 };
 
-export function ServiceCardGrid({
+export function ShowcaseCardGrid({
   id,
   heading,
   subheading,
   cards,
-}: ServiceCardGridProps) {
+}: ShowcaseCardGridProps) {
   const headingId = `${id}-heading`;
 
   return (
     <section
       data-component="card-grid"
       id={id}
-      className="py-16 sm:py-20"
+      className="border-t border-stone-200/80 bg-white py-16 sm:py-20"
       aria-labelledby={headingId}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -35,7 +35,7 @@ export function ServiceCardGrid({
           {cards.map((card) => (
             <article
               key={card.title}
-              className="group overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm transition hover:shadow-md"
+              className="group overflow-hidden rounded-2xl border border-stone-200/80 bg-stone-50/50 shadow-sm transition hover:border-amber-200/80 hover:shadow-md"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
