@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback, useId, useRef, useState } from "react";
 import type { AccordionItem } from "@/content/home";
 
 type AccordionProps = {
@@ -5,91 +8,27 @@ type AccordionProps = {
   heading: string;
   description: string;
   items: AccordionItem[];
-  initialVisibleCount?: number;
-  showMoreLabel?: string;
-  showLessLabel?: string;
+  initialVisibleCount: number;
+  showMoreLabel: string;
+  showLessLabel: string;
 };
 
-function ChevronIcon({ className = "" }: { className?: string }) {
+function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
+      aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
       viewBox="0 0 24 24"
       fill="none"
-      className={`h-5 w-5 shrink-0 sm:h-6 sm:w-6 ${className}`}
-      aria-hidden
     >
-      <path
-        d="M12.0001 14.9393L5.00011 7.93933L3.93945 8.99999L12.0001 17.0607L20.0608 8.99999L19.0001 7.93933L12.0001 14.9393Z"
-        fill="currentColor"
-      />
+      {expanded ? (
+        <path d="M12 6.93933L3.93936 15L5.00002 16.0607L12 9.06065L19 16.0606L20.0607 15L12 6.93933Z" />
+      ) : (
+        <path d="M12.0001 14.9393L5.00011 7.93933L3.93945 8.99999L12.0001 17.0607L20.0608 8.99999L19.0001 7.93933L12.0001 14.9393Z" />
+      )}
     </svg>
-  );
-}
-
-function FaqItem({
-  item,
-  className = "",
-}: {
-  item: AccordionItem;
-  className?: string;
-}) {
-  return (
-    <details
-      className={`group border-b-[3px] border-stone-200 transition-all duration-500 ease-in-out open:border-b-amber-800 ${className}`.trim()}
-    >
-      <summary className="flex w-full cursor-pointer list-none flex-row items-center justify-between gap-3 pt-8 outline-none marker:content-none focus-visible:ring-2 focus-visible:ring-amber-800 focus-visible:ring-offset-2 md:gap-16 md:pt-10 [&::-webkit-details-marker]:hidden group-open:pb-0 pb-8 md:pb-10">
-        <span className="text-start text-base font-normal leading-snug text-stone-900 sm:text-lg">
-          {item.heading}
-        </span>
-        <span className="transform text-stone-400 transition-transform duration-500 ease-in-out group-open:-rotate-90 group-open:text-amber-800">
-          <ChevronIcon />
-        </span>
-      </summary>
-      <div className="pt-3 pr-9 md:pr-[88px]">
-        <p className="text-sm font-light leading-relaxed text-stone-500 sm:text-base">
-          {item.description}
-        </p>
-      </div>
-    </details>
-  );
-}
-
-function ShowMoreToggle({
-  showMoreId,
-  showMoreLabel,
-  showLessLabel,
-  hiddenCount,
-}: {
-  showMoreId: string;
-  showMoreLabel: string;
-  showLessLabel: string;
-  hiddenCount: number;
-}) {
-  const labelClassName =
-    "flex cursor-pointer items-center gap-2 text-sm font-medium uppercase leading-4 text-stone-900 transition duration-300 hover:underline";
-
-  return (
-    <>
-      <label
-        htmlFor={showMoreId}
-        className={`${labelClassName} peer-checked:hidden`}
-      >
-        <span>{showMoreLabel}</span>
-        <ChevronIcon className="text-stone-400" />
-        <span className="sr-only">, show {hiddenCount} additional questions</span>
-      </label>
-      <label
-        htmlFor={showMoreId}
-        className={`${labelClassName} hidden peer-checked:flex`}
-      >
-        <span>{showLessLabel}</span>
-        <ChevronIcon className="-rotate-90 text-amber-800" />
-        <span className="sr-only">, hide {hiddenCount} additional questions</span>
-      </label>
-    </>
   );
 }
 
@@ -98,77 +37,197 @@ export function Accordion({
   heading,
   description,
   items,
-  initialVisibleCount = 3,
-  showMoreLabel = "Show More",
-  showLessLabel = "Show Less",
+  initialVisibleCount,
+  showMoreLabel,
+  showLessLabel,
 }: AccordionProps) {
+  const baseId = useId();
   const headingId = `${id}-heading`;
-  const showMoreId = `${id}-show-more`;
-  const primaryItems = items.slice(0, initialVisibleCount);
-  const extraItems = items.slice(initialVisibleCount);
-  const hasHiddenItems = extraItems.length > 0;
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const [showAllItems, setShowAllItems] = useState(
+    items.length <= initialVisibleCount,
+  );
+
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const hasHiddenItems = items.length > initialVisibleCount;
+
+  const getItemKey = useCallback(
+    (index: number) => `${id}-item-${index}`,
+    [id],
+  );
+
+  const toggleItem = useCallback((itemKey: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(itemKey)) {
+        next.delete(itemKey);
+      } else {
+        next.add(itemKey);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleHeaderKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    const buttons = buttonRefs.current.filter(
+      (button): button is HTMLButtonElement => button !== null,
+    );
+
+    if (buttons.length === 0) {
+      return;
+    }
+
+    let targetIndex: number | null = null;
+
+    switch (event.key) {
+      case "ArrowDown":
+      case "ArrowRight":
+        targetIndex = (index + 1) % buttons.length;
+        break;
+      case "ArrowUp":
+      case "ArrowLeft":
+        targetIndex = (index - 1 + buttons.length) % buttons.length;
+        break;
+      case "Home":
+        targetIndex = 0;
+        break;
+      case "End":
+        targetIndex = buttons.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    buttons[targetIndex]?.focus();
+  };
 
   return (
-    <section
+    <div
       data-component="accordion"
       id={id}
-      className="w-full bg-white py-20 sm:py-24 md:py-32 lg:py-40"
+      role="region"
+      className="w-full border-t border-stone-200/80 bg-white py-16 sm:py-20"
       aria-labelledby={headingId}
     >
-      <div className="mx-auto w-full max-w-[1312px] px-4 sm:px-8 md:px-16">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div
-          className="flex flex-col gap-10 md:flex-row md:gap-x-16 lg:gap-x-32"
-          role="region"
+          className="flex flex-col gap-10 md:flex-row md:gap-16"
           aria-labelledby={headingId}
         >
           <div className="w-full md:max-w-[515px]">
             <h2
               id={headingId}
-              className="pb-8 text-2xl font-normal leading-tight tracking-tight text-stone-900 sm:text-3xl md:pb-0 lg:text-4xl"
+              className="text-2xl font-normal tracking-tight text-stone-900 sm:text-3xl"
             >
               {heading}
             </h2>
-            {description ? (
-              <p className="mt-4 text-sm font-light leading-relaxed text-stone-500 sm:text-base md:mt-6">
-                {description}
-              </p>
-            ) : null}
+            <p className="mt-4 text-stone-600">{description}</p>
           </div>
 
           <div className="w-full md:w-[58%]">
-            <div role="group" aria-labelledby={headingId}>
-              {primaryItems.map((item) => (
-                <FaqItem key={item.heading} item={item} />
-              ))}
+            {items.map((item, index) => {
+              const itemKey = getItemKey(index);
+              const headerId = `${id}-header-${index}`;
+              const panelId = `${id}-content-${index}`;
+              const isExpanded = expandedIds.has(itemKey);
+              const isItemVisible = showAllItems || index < initialVisibleCount;
 
-              {hasHiddenItems ? (
-                <>
-                  <input
-                    type="checkbox"
-                    id={showMoreId}
-                    className="peer sr-only"
-                  />
-                  {extraItems.map((item) => (
-                    <FaqItem
-                      key={item.heading}
-                      item={item}
-                      className="hidden peer-checked:block"
-                    />
-                  ))}
-                  <div className="flex gap-4 py-8 md:py-10">
-                    <ShowMoreToggle
-                      showMoreId={showMoreId}
-                      showMoreLabel={showMoreLabel}
-                      showLessLabel={showLessLabel}
-                      hiddenCount={extraItems.length}
-                    />
+              if (!isItemVisible) {
+                return null;
+              }
+
+              return (
+                <div key={`${baseId}-${index}`}>
+                  <div
+                    className={`border-b-[3px] transition-all duration-500 ease-in-out ${
+                      isExpanded
+                        ? "border-b-amber-800 pb-8 md:pb-8"
+                        : "border-b-stone-200"
+                    }`}
+                  >
+                    <button
+                      ref={(element) => {
+                        buttonRefs.current[index] = element;
+                      }}
+                      type="button"
+                      id={headerId}
+                      className={`flex w-full cursor-pointer flex-row justify-between gap-12 pt-8 md:gap-16 md:pt-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800 ${
+                        isExpanded ? "" : "pb-8 md:pb-8"
+                      }`}
+                      aria-expanded={isExpanded}
+                      aria-controls={panelId}
+                      onClick={() => toggleItem(itemKey)}
+                      onKeyDown={(event) => handleHeaderKeyDown(event, index)}
+                    >
+                      <div className="flex flex-col text-start">
+                        <span className="cursor-pointer text-left text-base font-normal leading-snug text-stone-900 sm:text-lg">
+                          {item.heading}
+                        </span>
+                      </div>
+                      <span
+                        className={`transform transition-transform duration-500 ease-in-out ${
+                          isExpanded
+                            ? "rotate-180 text-amber-800"
+                            : "rotate-0 text-stone-400"
+                        }`}
+                      >
+                        <ChevronIcon expanded={isExpanded} />
+                      </span>
+                    </button>
+
+                    <div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={headerId}
+                      className={
+                        isExpanded
+                          ? "block transition-transform duration-300 ease-in"
+                          : "hidden transition-transform duration-300 ease-out"
+                      }
+                    >
+                      <div className="pb-0 pt-3 pr-9 md:pr-[88px]">
+                        <div className="rich-text">
+                          <div className="text-sm font-light leading-relaxed text-stone-600 sm:text-base">
+                            <span>{item.description}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </>
-              ) : null}
-            </div>
+                </div>
+              );
+            })}
+
+            {hasHiddenItems ? (
+              <div className="flex gap-4 py-8 md:py-10">
+                <div className="flex items-center gap-8">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 p-0 text-sm font-medium uppercase tracking-wide text-amber-900 transition hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800"
+                    aria-expanded={showAllItems}
+                    onClick={() => setShowAllItems((current) => !current)}
+                  >
+                    <span>{showAllItems ? showLessLabel : showMoreLabel}</span>
+                  </button>
+                  <span
+                    className={`transform transition-transform duration-500 ease-in-out text-stone-400 ${
+                      showAllItems ? "rotate-180" : "rotate-0"
+                    }`}
+                  >
+                    <ChevronIcon expanded={showAllItems} />
+                  </span>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
