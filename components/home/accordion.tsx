@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { AccordionItem } from "@/content/home";
 
 type AccordionProps = {
@@ -44,41 +44,23 @@ export function Accordion({
   const baseId = useId();
   const headingId = `${id}-heading`;
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [showAllItems, setShowAllItems] = useState(
     items.length <= initialVisibleCount,
   );
 
-  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const summaryRefs = useRef<(HTMLElement | null)[]>([]);
 
   const hasHiddenItems = items.length > initialVisibleCount;
 
-  const getItemKey = useCallback(
-    (index: number) => `${id}-item-${index}`,
-    [id],
-  );
-
-  const toggleItem = useCallback((itemKey: string) => {
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      if (next.has(itemKey)) {
-        next.delete(itemKey);
-      } else {
-        next.add(itemKey);
-      }
-      return next;
-    });
-  }, []);
-
-  const handleHeaderKeyDown = (
-    event: React.KeyboardEvent<HTMLButtonElement>,
+  const handleSummaryKeyDown = (
+    event: React.KeyboardEvent<HTMLElement>,
     index: number,
   ) => {
-    const buttons = buttonRefs.current.filter(
-      (button): button is HTMLButtonElement => button !== null,
+    const summaries = summaryRefs.current.filter(
+      (summary): summary is HTMLElement => summary !== null,
     );
 
-    if (buttons.length === 0) {
+    if (summaries.length === 0) {
       return;
     }
 
@@ -87,24 +69,24 @@ export function Accordion({
     switch (event.key) {
       case "ArrowDown":
       case "ArrowRight":
-        targetIndex = (index + 1) % buttons.length;
+        targetIndex = (index + 1) % summaries.length;
         break;
       case "ArrowUp":
       case "ArrowLeft":
-        targetIndex = (index - 1 + buttons.length) % buttons.length;
+        targetIndex = (index - 1 + summaries.length) % summaries.length;
         break;
       case "Home":
         targetIndex = 0;
         break;
       case "End":
-        targetIndex = buttons.length - 1;
+        targetIndex = summaries.length - 1;
         break;
       default:
         return;
     }
 
     event.preventDefault();
-    buttons[targetIndex]?.focus();
+    summaries[targetIndex]?.focus();
   };
 
   return (
@@ -132,10 +114,8 @@ export function Accordion({
 
           <div className="w-full md:w-[58%]">
             {items.map((item, index) => {
-              const itemKey = getItemKey(index);
               const headerId = `${id}-header-${index}`;
               const panelId = `${id}-content-${index}`;
-              const isExpanded = expandedIds.has(itemKey);
               const isItemVisible = showAllItems || index < initialVisibleCount;
 
               if (!isItemVisible) {
@@ -144,52 +124,30 @@ export function Accordion({
 
               return (
                 <div key={`${baseId}-${index}`}>
-                  <div
-                    className={`border-b-[3px] transition-all duration-500 ease-in-out ${
-                      isExpanded
-                        ? "border-b-amber-800 pb-8 md:pb-8"
-                        : "border-b-stone-200"
-                    }`}
-                  >
-                    <button
+                  <details className="group border-b-[3px] border-b-stone-200 transition-all duration-500 ease-in-out open:border-b-amber-800 open:pb-8 md:open:pb-8">
+                    <summary
                       ref={(element) => {
-                        buttonRefs.current[index] = element;
+                        summaryRefs.current[index] = element;
                       }}
-                      type="button"
                       id={headerId}
-                      className={`flex w-full cursor-pointer flex-row justify-between gap-12 pt-8 md:gap-16 md:pt-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800 ${
-                        isExpanded ? "" : "pb-8 md:pb-8"
-                      }`}
-                      aria-expanded={isExpanded}
-                      aria-controls={panelId}
-                      onClick={() => toggleItem(itemKey)}
-                      onKeyDown={(event) => handleHeaderKeyDown(event, index)}
+                      className="flex cursor-pointer list-none flex-row justify-between gap-12 pb-8 pt-8 marker:content-none md:gap-16 md:pb-8 md:pt-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800 group-open:pb-0 [&::-webkit-details-marker]:hidden"
+                      onKeyDown={(event) => handleSummaryKeyDown(event, index)}
                     >
                       <div className="flex flex-col text-start">
                         <span className="cursor-pointer text-left text-base font-normal leading-snug text-stone-900 sm:text-lg">
                           {item.heading}
                         </span>
                       </div>
-                      <span
-                        className={`transform transition-transform duration-500 ease-in-out ${
-                          isExpanded
-                            ? "rotate-180 text-amber-800"
-                            : "rotate-0 text-stone-400"
-                        }`}
-                      >
-                        <ChevronIcon expanded={isExpanded} />
+                      <span className="shrink-0 rotate-0 transform text-stone-400 transition-transform duration-500 ease-in-out group-open:rotate-180 group-open:text-amber-800">
+                        <ChevronIcon expanded={false} />
                       </span>
-                    </button>
+                    </summary>
 
                     <div
                       id={panelId}
                       role="region"
                       aria-labelledby={headerId}
-                      className={
-                        isExpanded
-                          ? "block transition-transform duration-300 ease-in"
-                          : "hidden transition-transform duration-300 ease-out"
-                      }
+                      className="transition-transform duration-300 ease-in"
                     >
                       <div className="pb-0 pt-3 pr-9 md:pr-[88px]">
                         <div className="rich-text">
@@ -199,7 +157,7 @@ export function Accordion({
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </details>
                 </div>
               );
             })}
