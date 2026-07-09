@@ -124,40 +124,49 @@ export function Accordion({
 
               return (
                 <div key={`${baseId}-${index}`}>
-                  <details className="group border-b-[3px] border-b-stone-200 transition-all duration-500 ease-in-out open:border-b-amber-800 open:pb-8 md:open:pb-8">
-                    <summary
-                      ref={(element) => {
-                        summaryRefs.current[index] = element;
-                      }}
-                      id={headerId}
-                      className="flex cursor-pointer list-none flex-row justify-between gap-12 pb-8 pt-8 marker:content-none md:gap-16 md:pb-8 md:pt-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800 group-open:pb-0 [&::-webkit-details-marker]:hidden"
-                      onKeyDown={(event) => handleSummaryKeyDown(event, index)}
-                    >
-                      <div className="flex flex-col text-start">
-                        <span className="cursor-pointer text-left text-base font-normal leading-snug text-stone-900 sm:text-lg">
-                          {item.heading}
+                  <div
+                    id={`${id}-item-${index}`}
+                    data-component="accordion-item"
+                    data-accordion-index={index}
+                    className="border-b-[3px] border-b-stone-200 transition-all duration-500 ease-in-out has-[details[open]]:border-b-amber-800 has-[details[open]]:pb-8 md:has-[details[open]]:pb-8"
+                  >
+                    <details className="group">
+                      <summary
+                        ref={(element) => {
+                          summaryRefs.current[index] = element;
+                        }}
+                        id={headerId}
+                        className="flex cursor-pointer list-none flex-row justify-between gap-12 pb-8 pt-8 marker:content-none md:gap-16 md:pb-8 md:pt-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800 group-open:pb-0 [&::-webkit-details-marker]:hidden"
+                        onKeyDown={(event) =>
+                          handleSummaryKeyDown(event, index)
+                        }
+                      >
+                        <div className="flex flex-col text-start">
+                          <span className="cursor-pointer text-left text-base font-normal leading-snug text-stone-900 sm:text-lg">
+                            {item.heading}
+                          </span>
+                        </div>
+                        <span className="shrink-0 rotate-0 transform text-stone-400 transition-transform duration-500 ease-in-out group-open:rotate-180 group-open:text-amber-800">
+                          <ChevronIcon expanded={false} />
                         </span>
-                      </div>
-                      <span className="shrink-0 rotate-0 transform text-stone-400 transition-transform duration-500 ease-in-out group-open:rotate-180 group-open:text-amber-800">
-                        <ChevronIcon expanded={false} />
-                      </span>
-                    </summary>
+                      </summary>
 
-                    <div
-                      id={panelId}
-                      role="region"
-                      aria-labelledby={headerId}
-                      className="transition-transform duration-300 ease-in"
-                    >
-                      <div className="pb-0 pt-3 pr-9 md:pr-[88px]">
-                        <div className="rich-text">
-                          <div className="text-sm font-light leading-relaxed text-stone-600 sm:text-base">
-                            <span>{item.description}</span>
+                      <div
+                        id={panelId}
+                        role="region"
+                        aria-labelledby={headerId}
+                        className="transition-transform duration-300 ease-in"
+                      >
+                        <div className="pb-0 pt-3 pr-9 md:pr-[88px]">
+                          <div className="rich-text">
+                            <div className="text-sm font-light leading-relaxed text-stone-600 sm:text-base">
+                              <span>{item.description}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </details>
+                    </details>
+                  </div>
                 </div>
               );
             })}
