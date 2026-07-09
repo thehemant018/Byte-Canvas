@@ -8,85 +8,127 @@ type AccordionProps = {
   heading: string;
   description: string;
   items: AccordionItem[];
+  initialVisibleCount?: number;
+  showMoreLabel?: string;
+  showLessLabel?: string;
 };
 
-export function Accordion({ id, heading, description, items }: AccordionProps) {
-  const baseId = useId();
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+function PlusMinusIcon({ open }: { open: boolean }) {
+  return (
+    <span
+      className="relative flex h-5 w-5 shrink-0 items-center justify-center text-stone-900"
+      aria-hidden
+    >
+      <span className="absolute h-px w-4 bg-current" />
+      <span
+        className={`absolute h-4 w-px bg-current transition-all duration-300 ${open ? "scale-y-0 opacity-0" : "scale-y-100 opacity-100"}`}
+      />
+    </span>
+  );
+}
 
-  const toggle = (index: number) => {
-    setOpenIndex((current) => (current === index ? null : index));
+export function Accordion({
+  id,
+  heading,
+  description,
+  items,
+  initialVisibleCount = 3,
+  showMoreLabel = "Show More",
+  showLessLabel = "Show Less",
+}: AccordionProps) {
+  const baseId = useId();
+  const headingId = `${id}-heading`;
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  const hasHiddenItems = items.length > initialVisibleCount;
+  const visibleItems = showAll ? items : items.slice(0, initialVisibleCount);
+
+  const toggle = (heading: string) => {
+    setOpenKey((current) => (current === heading ? null : heading));
   };
 
   return (
     <section
       data-component="accordion"
       id={id}
-      className="border-t border-stone-200/80 bg-white py-16 sm:py-20"
-      aria-labelledby={`${baseId}-heading`}
+      className="border-t border-stone-200/80 bg-white py-16 sm:py-24"
+      aria-labelledby={headingId}
     >
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <h2
-          id={`${baseId}-heading`}
-          className="text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl"
-        >
-          {heading}
-        </h2>
-        <p className="mt-2 text-stone-600">{description}</p>
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div className="text-center">
+          <h2
+            id={headingId}
+            className="text-2xl font-bold tracking-tight text-stone-900 sm:text-4xl"
+          >
+            {heading}
+          </h2>
+          {description ? (
+            <p className="mx-auto mt-4 max-w-2xl text-stone-600">{description}</p>
+          ) : null}
+        </div>
 
-        <div className="mt-10 divide-y divide-stone-200/80 rounded-2xl border border-stone-200/80 bg-stone-50/50">
-          {items.map((item, index) => {
-            const isOpen = openIndex === index;
+        <div className="mt-12 border-t border-stone-200">
+          {visibleItems.map((item, index) => {
+            const isOpen = openKey === item.heading;
             const triggerId = `${baseId}-trigger-${index}`;
             const panelId = `${baseId}-panel-${index}`;
 
             return (
-              <div key={item.heading}>
+              <div
+                key={item.heading}
+                className="border-b border-stone-200"
+              >
                 <h3>
                   <button
                     type="button"
                     id={triggerId}
-                    className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition hover:bg-stone-100/60"
+                    className="flex w-full items-center justify-between gap-6 py-5 text-left sm:py-6"
                     aria-expanded={isOpen}
                     aria-controls={panelId}
-                    onClick={() => toggle(index)}
+                    onClick={() => toggle(item.heading)}
                   >
-                    <span className="text-base font-semibold text-stone-900 sm:text-lg">
+                    <span className="text-base font-medium text-stone-900 sm:text-lg">
                       {item.heading}
                     </span>
-                    <span
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition"
-                      aria-hidden
-                    >
-                      <svg
-                        className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
+                    <PlusMinusIcon open={isOpen} />
                   </button>
                 </h3>
                 <div
                   id={panelId}
                   role="region"
                   aria-labelledby={triggerId}
-                  hidden={!isOpen}
-                  className="px-6 pb-5"
+                  className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
                 >
-                  <p className="text-sm leading-relaxed text-stone-600 sm:text-base">
-                    {item.description}
-                  </p>
+                  <div className="overflow-hidden">
+                    <p className="max-w-3xl pb-5 text-sm leading-relaxed text-stone-600 sm:pb-6 sm:text-base">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
+
+        {hasHiddenItems ? (
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 border-b border-stone-900 pb-0.5 text-sm font-semibold tracking-wide text-stone-900 uppercase transition hover:text-amber-900 hover:border-amber-900"
+              aria-expanded={showAll}
+              onClick={() => {
+                setShowAll((current) => {
+                  const next = !current;
+                  if (!next) setOpenKey(null);
+                  return next;
+                });
+              }}
+            >
+              {showAll ? showLessLabel : showMoreLabel}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

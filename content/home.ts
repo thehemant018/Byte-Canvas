@@ -159,9 +159,12 @@ export const byteCanvasHome = {
   },
   faq: {
     id: "faq",
-    heading: "Common questions",
+    heading: "Frequently Asked Questions",
     description:
       "How we work, what to expect, and how we tailor each residential project to your home and budget.",
+    showMoreLabel: "Show More",
+    showLessLabel: "Show Less",
+    initialVisibleCount: 3,
     items: [
       {
         heading: "How does a project typically start?",
@@ -177,6 +180,21 @@ export const byteCanvasHome = {
         heading: "What budget range do you usually work with?",
         description:
           "Most of our residential engagements span room refreshes through full-home renovations. We align scope and finishes to your budget early and flag trade-offs before anything is ordered or installed.",
+      },
+      {
+        heading: "How long does a typical residential project take?",
+        description:
+          "Timelines depend on scope — a single-room refresh may take a few weeks, while a full-home renovation can span several months. We share a realistic schedule during the proposal phase and keep you updated as selections and installs progress.",
+      },
+      {
+        heading: "Can you work with pieces I already own?",
+        description:
+          "Yes. We often integrate existing furniture, art, and heirlooms into a refreshed plan. During discovery we note what stays, what moves, and what might need reupholstery or reframing to feel at home in the new layout.",
+      },
+      {
+        heading: "How do I book a consultation?",
+        description:
+          "Reach out through our contact form or email to schedule an introductory call. We will discuss your space, timeline, and goals, then outline next steps if we are a good fit for your project.",
       },
     ] satisfies AccordionItem[],
   },

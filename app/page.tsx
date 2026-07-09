@@ -51,6 +51,9 @@ export default function Home() {
         heading={c.faq.heading}
         description={c.faq.description}
         items={[...c.faq.items]}
+        initialVisibleCount={c.faq.initialVisibleCount}
+        showMoreLabel={c.faq.showMoreLabel}
+        showLessLabel={c.faq.showLessLabel}
       />
       <BlogPreviewGrid
         id={c.blogPreview.id}
