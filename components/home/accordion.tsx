@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 import type { AccordionItem } from "@/content/home";
 
 type AccordionProps = {
@@ -38,14 +38,64 @@ export function Accordion({
 }: AccordionProps) {
   const baseId = useId();
   const headingId = `${id}-heading`;
+  const accordionGroupId = `${baseId}-accordion-group`;
+  const accordionRef = useRef<HTMLDivElement>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   const hasHiddenItems = items.length > initialVisibleCount;
-  const visibleItems = showAll ? items : items.slice(0, initialVisibleCount);
+  const hiddenCount = items.length - initialVisibleCount;
+  const visibleEntries = items
+    .map((item, itemIndex) => ({ item, itemIndex }))
+    .filter(({ itemIndex }) => showAll || itemIndex < initialVisibleCount)
+    .map((entry, visibleIndex) => ({ ...entry, visibleIndex }));
 
-  const toggle = (heading: string) => {
-    setOpenKey((current) => (current === heading ? null : heading));
+  const itemKey = (itemIndex: number) => `${baseId}-item-${itemIndex}`;
+
+  const toggle = (headingText: string) => {
+    setOpenKey((current) => (current === headingText ? null : headingText));
+  };
+
+  const focusTriggerAt = (visibleIndex: number) => {
+    const triggers = accordionRef.current?.querySelectorAll<HTMLButtonElement>(
+      "[data-accordion-trigger]",
+    );
+    triggers?.[visibleIndex]?.focus();
+  };
+
+  const handleTriggerKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    visibleIndex: number,
+  ) => {
+    const triggerCount =
+      accordionRef.current?.querySelectorAll("[data-accordion-trigger]")
+        .length ?? 0;
+    if (!triggerCount) return;
+
+    let nextIndex: number | null = null;
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        nextIndex = (visibleIndex + 1) % triggerCount;
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        nextIndex = (visibleIndex - 1 + triggerCount) % triggerCount;
+        break;
+      case "Home":
+        event.preventDefault();
+        nextIndex = 0;
+        break;
+      case "End":
+        event.preventDefault();
+        nextIndex = triggerCount - 1;
+        break;
+      default:
+        return;
+    }
+
+    focusTriggerAt(nextIndex);
   };
 
   return (
@@ -68,25 +118,32 @@ export function Accordion({
           ) : null}
         </div>
 
-        <div className="mt-12 border-t border-stone-200">
-          {visibleItems.map((item, index) => {
+        <div
+          ref={accordionRef}
+          id={accordionGroupId}
+          role="group"
+          aria-labelledby={headingId}
+          className="mt-12 border-t border-stone-200"
+        >
+          {visibleEntries.map(({ item, itemIndex, visibleIndex }) => {
             const isOpen = openKey === item.heading;
-            const triggerId = `${baseId}-trigger-${index}`;
-            const panelId = `${baseId}-panel-${index}`;
+            const triggerId = `${itemKey(itemIndex)}-trigger`;
+            const panelId = `${itemKey(itemIndex)}-panel`;
 
             return (
-              <div
-                key={item.heading}
-                className="border-b border-stone-200"
-              >
-                <h3>
+              <div key={itemKey(itemIndex)} className="border-b border-stone-200">
+                <h3 className="m-0">
                   <button
                     type="button"
                     id={triggerId}
-                    className="flex w-full items-center justify-between gap-6 py-5 text-left sm:py-6"
+                    data-accordion-trigger
+                    className="flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-800 focus-visible:ring-offset-2 sm:py-6"
                     aria-expanded={isOpen}
                     aria-controls={panelId}
                     onClick={() => toggle(item.heading)}
+                    onKeyDown={(event) =>
+                      handleTriggerKeyDown(event, visibleIndex)
+                    }
                   >
                     <span className="text-base font-medium text-stone-900 sm:text-lg">
                       {item.heading}
@@ -98,6 +155,8 @@ export function Accordion({
                   id={panelId}
                   role="region"
                   aria-labelledby={triggerId}
+                  aria-hidden={!isOpen}
+                  inert={!isOpen ? true : undefined}
                   className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
                 >
                   <div className="overflow-hidden">
@@ -115,17 +174,29 @@ export function Accordion({
           <div className="mt-8 flex justify-center">
             <button
               type="button"
-              className="inline-flex items-center gap-2 border-b border-stone-900 pb-0.5 text-sm font-semibold tracking-wide text-stone-900 uppercase transition hover:text-amber-900 hover:border-amber-900"
+              className="inline-flex items-center gap-2 border-b border-stone-900 pb-0.5 text-sm font-semibold tracking-wide text-stone-900 uppercase outline-none transition hover:border-amber-900 hover:text-amber-900 focus-visible:ring-2 focus-visible:ring-amber-800 focus-visible:ring-offset-2"
               aria-expanded={showAll}
+              aria-controls={accordionGroupId}
               onClick={() => {
                 setShowAll((current) => {
                   const next = !current;
-                  if (!next) setOpenKey(null);
+                  if (!next) {
+                    setOpenKey(null);
+                  } else {
+                    requestAnimationFrame(() =>
+                      focusTriggerAt(initialVisibleCount),
+                    );
+                  }
                   return next;
                 });
               }}
             >
               {showAll ? showLessLabel : showMoreLabel}
+              <span className="sr-only">
+                {showAll
+                  ? `, hide ${hiddenCount} additional questions`
+                  : `, show ${hiddenCount} additional questions`}
+              </span>
             </button>
           </div>
         ) : null}
