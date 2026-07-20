@@ -1,14 +1,30 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Cta, NavItem } from "@/content/home";
+import type { Locale } from "@/lib/i18n";
+import { localeLabels, locales, stripLocale } from "@/lib/i18n";
 
 type SiteHeaderProps = {
   brandName: string;
   logoHref: string;
   nav: NavItem[];
   cta: Cta;
+  locale: Locale;
 };
 
-export function SiteHeader({ brandName, logoHref, nav, cta }: SiteHeaderProps) {
+export function SiteHeader({
+  brandName,
+  logoHref,
+  nav,
+  cta,
+  locale,
+}: SiteHeaderProps) {
+  const pathname = usePathname() || "/";
+  const pathWithoutLocale = stripLocale(pathname);
+  const switchSuffix = pathWithoutLocale === "/" ? "" : pathWithoutLocale;
+
   return (
     <section
       data-component="header"
@@ -35,12 +51,35 @@ export function SiteHeader({ brandName, logoHref, nav, cta }: SiteHeaderProps) {
             </Link>
           ))}
         </nav>
-        <Link
-          href={cta.href}
-          className="rounded-lg bg-amber-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-900"
-        >
-          {cta.label}
-        </Link>
+        <div className="flex items-center gap-3">
+          <nav
+            className="flex items-center gap-1 text-xs font-semibold tracking-wide text-stone-500"
+            aria-label="Language"
+          >
+            {locales.map((code) => (
+              <Link
+                key={code}
+                href={`/${code}${switchSuffix}`}
+                hrefLang={code}
+                lang={code}
+                aria-current={code === locale ? "true" : undefined}
+                className={
+                  code === locale
+                    ? "rounded px-1.5 py-0.5 text-amber-900"
+                    : "rounded px-1.5 py-0.5 transition hover:text-amber-800"
+                }
+              >
+                {localeLabels[code]}
+              </Link>
+            ))}
+          </nav>
+          <Link
+            href={cta.href}
+            className="rounded-lg bg-amber-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-900"
+          >
+            {cta.label}
+          </Link>
+        </div>
       </header>
     </section>
   );

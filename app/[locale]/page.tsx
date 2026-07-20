@@ -8,13 +8,21 @@ import {
   ShowcaseCardGrid,
 } from "@/components/home";
 import { getAllBlogPosts } from "@/content/blog";
-import { byteCanvasHome } from "@/content/home";
+import { getHomeContent } from "@/content/home";
+import { isLocale, type Locale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
 
-const c = byteCanvasHome;
 const HOME_BLOG_CARD_COUNT = 6;
 
-export default function Home() {
-  const blogPreviews = getAllBlogPosts()
+type PageProps = { params: Promise<{ locale: string }> };
+
+export default async function Home({ params }: PageProps) {
+  const { locale: raw } = await params;
+  if (!isLocale(raw)) notFound();
+  const locale = raw as Locale;
+  const c = getHomeContent(locale);
+
+  const blogPreviews = getAllBlogPosts(locale)
     .slice(0, HOME_BLOG_CARD_COUNT)
     .map((p) => ({
       slug: p.slug,
@@ -63,6 +71,7 @@ export default function Home() {
         cardCtaLabel={c.blogPreview.cardCtaLabel}
         viewAllHref={c.blogPreview.viewAllHref}
         viewAllLabel={c.blogPreview.viewAllLabel}
+        locale={locale}
       />
       <FeatureHighlight
         id={c.featureHighlight.id}

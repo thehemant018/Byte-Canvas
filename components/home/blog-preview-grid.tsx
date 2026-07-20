@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Locale } from "@/lib/i18n";
 
 export type BlogPreviewCard = {
   slug: string;
@@ -15,10 +16,11 @@ type BlogPreviewGridProps = {
   cardCtaLabel: string;
   viewAllHref: string;
   viewAllLabel: string;
+  locale: Locale;
 };
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(iso: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -33,6 +35,7 @@ export function BlogPreviewGrid({
   cardCtaLabel,
   viewAllHref,
   viewAllLabel,
+  locale,
 }: BlogPreviewGridProps) {
   return (
     <section
@@ -70,7 +73,7 @@ export function BlogPreviewGrid({
                 className="text-xs font-medium uppercase tracking-wide text-stone-500"
                 dateTime={post.publishedAt}
               >
-                {formatDate(post.publishedAt)}
+                {formatDate(post.publishedAt, locale)}
               </time>
               <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-snug text-stone-900">
                 {post.title}
@@ -79,7 +82,7 @@ export function BlogPreviewGrid({
                 {post.excerpt}
               </p>
               <Link
-                href={`/blog/${post.slug}`}
+                href={`/${locale}/blog/${post.slug}`}
                 className="mt-6 inline-flex w-fit items-center rounded-lg bg-amber-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-900"
               >
                 {cardCtaLabel}
