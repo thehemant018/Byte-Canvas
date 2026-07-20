@@ -9,16 +9,50 @@ export const localeLabels: Record<Locale, string> = {
   fr: "FR",
 };
 
-/** Public site origin used for absolute hreflang URLs. */
-export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "https://bytecanvas.example";
+/** Canonical production origin for hreflang and metadataBase. */
+export const PRODUCTION_SITE_URL = "https://byte-canvas-eta.vercel.app";
+
+function normalizeOrigin(value: string): string {
+  return value.trim().replace(/\/$/, "");
+}
+
+function isPlaceholderOrigin(value: string): boolean {
+  try {
+    const host = new URL(value).hostname;
+    return (
+      host === "bytecanvas.example" ||
+      host.endsWith(".example") ||
+      host === "example.com" ||
+      host.endsWith(".example.com")
+    );
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Public site origin for absolute hreflang URLs.
+ * Prefer a real NEXT_PUBLIC_SITE_URL; never keep placeholder *.example hosts.
+ * Locally uses localhost; production defaults to the Vercel app URL.
+ */
+export const siteUrl = (() => {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL
+    ? normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL)
+    : "";
+  if (explicit && !isPlaceholderOrigin(explicit)) {
+    return explicit;
+  }
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+  return PRODUCTION_SITE_URL;
+})();
 
 export function isLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value);
 }
 
-/** Path without a locale prefix, always starting with `/` (or `#…`). */
+/** Path without a locale prefix, always starting with `/`. */
 export function stripLocale(pathname: string): string {
   const segments = pathname.split("/");
   if (segments.length > 1 && isLocale(segments[1])) {
@@ -58,18 +92,21 @@ export function localizeHref(locale: Locale, href: string): string {
   return href;
 }
 
-/** Absolute URL for a locale + path (path may include leading `/`). */
-export function absoluteUrl(locale: Locale, path = "/"): string {
-  const normalized =
-    !path || path === "/"
-      ? `/${locale}`
-      : path.startsWith("/")
-        ? `/${locale}${path}`
-        : `/${locale}/${path}`;
-  return `${siteUrl}${normalized}`;
+/** Locale-prefixed path (no origin), e.g. `/fr/blog`. */
+export function localizedPath(locale: Locale, path = "/"): string {
+  if (!path || path === "/") {
+    return `/${locale}`;
+  }
+  const clean = path.startsWith("/") ? path : `/${path}`;
+  return `/${locale}${clean}`;
 }
 
-/** Next.js `metadata.alternates.languages` map including `x-default`. */
+/** Absolute URL for a locale + path. */
+export function absoluteUrl(locale: Locale, path = "/"): string {
+  return `${siteUrl}${localizedPath(locale, path)}`;
+}
+
+/** `metadata.alternates.languages` including `x-default`. */
 export function hreflangAlternates(path = "/"): Record<string, string> {
   const clean =
     !path || path === "/"
